@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Data Extractor by Oni</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translateX(-1px); }
+            20%, 80% { transform: translateX(2px); }
+            30%, 50%, 70% { transform: translateX(-4px); }
+            40%, 60% { transform: translateX(4px); }
+        }
+        .glow {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+        .success-message {
+            animation: successFade 3s ease-in-out forwards;
+        }
+        @keyframes successFade {
+            0% { opacity: 0; transform: translateY(20px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+        .copy-btn {
+            transition: all 0.2s ease;
+        }
+        .copy-btn:hover {
+            transform: scale(1.05);
+        }
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Login Interface (initially visible) -->
+    <div id="loginInterface" class="min-h-screen flex items-center justify-center">
+        <div class="container mx-auto px-4 max-w-md">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden fade-in">
+                <!-- Header -->
+                <div class="bg-red-600 px-6 py-5 text-center">
+                    <div class="flex justify-center items-center">
+                        <i class="fas fa-lock text-white text-3xl mr-3"></i>
+                        <h1 class="text-2xl font-bold text-white">Secure Login</h1>
+                    </div>
+                    <p class="text-red-100 mt-2">Access your YouTube Data Extractor</p>
+                </div>
+                
+                <!-- Login Form -->
+                <div class="p-6">
+                    <form id="loginForm" class="space-y-6">
+                        <!-- Username Field -->
+                        <div>
+                            <label for="username" class="block text-gray-700 font-medium mb-2">
+                                <i class="fas fa-user mr-2 text-gray-500"></i>Username
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="text" 
+                                    id="username" 
+                                    placeholder="Enter your username" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition pl-10"
+                                    required
+                                >
+                                <i class="fas fa-user absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Password Field -->
+                        <div>
+                            <label for="password" class="block text-gray-700 font-medium mb-2">
+                                <i class="fas fa-key mr-2 text-gray-500"></i>Password
+                            </label>
+                            <div class="relative">
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    placeholder="Enter your password" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition pl-10"
+                                    required
+                                >
+                                <i class="fas fa-key absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                <button 
+                                    type="button" 
+                                    id="togglePassword" 
+                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                >
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Remember Me & Forgot Password -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input 
+                                    id="rememberMe" 
+                                    type="checkbox" 
+                                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                >
+                                <label for="rememberMe" class="ml-2 block text-sm text-gray-700">
+                                    Remember me
+                                </label>
+                            </div>
+                            <div class="text-sm">
+                                <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
+                                    Forgot password?
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div>
+                            <button 
+                                type="submit" 
+                                class="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2"
+                            >
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Error Message -->
+                    <div id="errorMessage" class="hidden mt-4 bg-red-50 border-l-4 border-red-500 p-4 rounded fade-in">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-circle text-red-500"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-red-700">Invalid username or password. Please try again.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div id="successMessage" class="hidden mt-4 bg-green-50 border-l-4 border-green-500 p-4 rounded fade-in success-message">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-check-circle text-green-500"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-green-700">Login successful! Redirecting...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 text-center text-gray-500 text-sm">
+                    <p>Don't have an account? <a href="#" class="font-medium text-blue-600 hover:text-blue-500">Contact admin</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube Data Extractor Interface (initially hidden) -->
+    <div id="extractorInterface" class="hidden min-h-screen">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <!-- Header -->
+                <div class="bg-red-600 px-6 py-4">
+                    <div class="flex justify-between items-center">
+                        <h1 class="text-2xl font-bold text-white">YouTube Data Extractor</h1>
+                        <span class="text-white text-sm bg-black bg-opacity-20 px-3 py-1 rounded-full">by Oni</span>
+                    </div>
+                    <p class="text-red-100 mt-1">Extract video details without the hassle</p>
+                </div>
+                
+                <!-- Main Content -->
+                <div class="p-6">
+                    <!-- Input Section -->
+                    <div class="mb-8">
+                        <label for="videoUrl" class="block text-gray-700 font-medium mb-2">YouTube Video URL</label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="text" 
+                                id="videoUrl" 
+                                placeholder="https://www.youtube.com/watch?v=..." 
+                                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            >
+                            <button 
+                                id="extractBtn" 
+                                class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition flex items-center gap-2"
+                            >
+                                <i class="fas fa-play"></i> Extract
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Results Section -->
+                    <div id="resultsSection" class="hidden fade-in">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold text-gray-800">Video Details</h2>
+                            <button 
+                                id="copyAllBtn" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 copy-btn"
+                            >
+                                <i class="fas fa-copy"></i> Copy All
+                            </button>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Video Title -->
+                                <div class="bg-white p-4 rounded-lg border border-gray-200 relative">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-gray-500 text-sm font-medium">Video Title</p>
+                                            <p id="videoTitle" class="text-gray-800 font-medium mt-1">-</p>
+                                        </div>
+                                        <button 
+                                            onclick="copyToClipboard('videoTitle')" 
+                                            class="text-gray-400 hover:text-blue-600 copy-btn p-1" 
+                                            title="Copy"
+                                        >
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Channel Name -->
+                                <div class="bg-white p-4 rounded-lg border border-gray-200 relative">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-gray-500 text-sm font-medium">Channel Name</p>
+                                            <p id="channelName" class="text-gray-800 font-medium mt-1">-</p>
+                                        </div>
+                                        <button 
+                                            onclick="copyToClipboard('channelName')" 
+                                            class="text-gray-400 hover:text-blue-600 copy-btn p-1" 
+                                            title="Copy"
+                                        >
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Views Count -->
+                                <div class="bg-white p-4 rounded-lg border border-gray-200 relative">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-gray-500 text-sm font-medium">Views</p>
+                                            <p id="viewsCount" class="text-gray-800 font-medium mt-1">-</p>
+                                        </div>
+                                        <button 
+                                            onclick="copyToClipboard('viewsCount')" 
+                                            class="text-gray-400 hover:text-blue-600 copy-btn p-1" 
+                                            title="Copy"
+                                        >
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Likes Count -->
+                                <div class="bg-white p-4 rounded-lg border border-gray-200 relative">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-gray-500 text-sm font-medium">Likes</p>
+                                            <p id="likesCount" class="text-gray-800 font-medium mt-1">-</p>
+                                        </div>
+                                        <button 
+                                            onclick="copyToClipboard('likesCount')" 
+                                            class="text-gray-400 hover:text-blue-600 copy-btn p-1" 
+                                            title="Copy"
+                                        >
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Comments Count -->
+                                <div class="bg-white p-4 rounded-lg border border-gray-200 relative">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-gray-500 text-sm font-medium">Comments</p>
+                                            <p id="commentsCount" class="text-gray-800 font-medium mt-1">-</p>
+                                        </div>
+                                        <button 
+                                            onclick="copyToClipboard('commentsCount')" 
+                                            class="text-gray-400 hover:text-blue-600 copy-btn p-1" 
+                                            title="Copy"
+                                        >
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Published Date -->
+                                <div class="bg-white p-4 rounded-lg border border-gray-200 relative">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-gray-500 text-sm font-medium">Published Date</p>
+                                            <p id="publishedDate" class="text-gray-800 font-medium mt-1">-</p>
+                                        </div>
+                                        <button 
+                                            onclick="copyToClipboard('publishedDate')" 
+                                            class="text-gray-400 hover:text-blue-600 copy-btn p-1" 
+                                            title="Copy"
+                                        >
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Video Runtime -->
+                                <div class="bg-white p-4 rounded-lg border border-gray-200 relative">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-gray-500 text-sm font-medium">Duration</p>
+                                            <p id="videoRuntime" class="text-gray-800 font-medium mt-1">-</p>
+                                        </div>
+                                        <button 
+                                            onclick="copyToClipboard('videoRuntime')" 
+                                            class="text-gray-400 hover:text-blue-600 copy-btn p-1" 
+                                            title="Copy"
+                                        >
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Engagement Calculation -->
+                                <div class="bg-white p-4 rounded-lg border border-gray-200 relative">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="text-gray-500 text-sm font-medium">Engagement Calculation</p>
+                                            <p id="engagementCalculation" class="text-gray-800 font-medium mt-1">-</p>
+                                        </div>
+                                        <button 
+                                            onclick="copyToClipboard('engagementCalculation')" 
+                                            class="text-gray-400 hover:text-blue-600 copy-btn p-1" 
+                                            title="Copy"
+                                        >
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading State -->
+                    <div id="loadingState" class="hidden text-center py-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600 mx-auto mb-4"></div>
+                        <p class="text-gray-600">Extracting video details...</p>
+                    </div>
+                    
+                    <!-- Error State -->
+                    <div id="errorState" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded fade-in">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-circle text-red-500"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p id="errorMessage" class="text-sm text-red-700"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Logout Button -->
+                    <div class="mt-6 text-center">
+                        <button 
+                            id="logoutBtn" 
+                            class="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded-lg font-medium transition flex items-center gap-2 mx-auto"
+                        >
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 text-center text-gray-500 text-sm">
+                    <p>Created with ❤️ by Oni</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        const loginErrorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const rememberMe = document.getElementById('rememberMe');
+        const loginInterface = document.getElementById('loginInterface');
+        const extractorInterface = document.getElementById('extractorInterface');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        // YouTube Extractor Elements
+        const videoUrlInput = document.getElementById('videoUrl');
+        const extractBtn = document.getElementById('extractBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const loadingState = document.getElementById('loadingState');
+        const errorState = document.getElementById('errorState');
+        const errorMessage = document.getElementById('errorMessage');
+        const copyAllBtn = document.getElementById('copyAllBtn');
+        
+        // API Key
+        const API_KEY = "AIzaSyBT1EiS3-S_y4GK3kN4xrW_o7Dg1nXjNV8";
+        
+        // Toggle password visibility
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        });
+        
+        // Check if credentials are remembered
+        document.addEventListener('DOMContentLoaded', function() {
+            const rememberedUsername = localStorage.getItem('rememberedUsername');
+            const rememberedPassword = localStorage.getItem('rememberedPassword');
+            
+            if (rememberedUsername && rememberedPassword) {
+                usernameInput.value = rememberedUsername;
+                passwordInput.value = rememberedPassword;
+                rememberMe.checked = true;
+            }
+        });
+        
+        // Handle form submission
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Hide any previous messages
+            loginErrorMessage.classList.add('hidden');
+            successMessage.classList.add('hidden');
+            
+            // Get input values
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            // Validate credentials (username: "oni", password: "oni1234")
+            if (username === 'oni' && password === 'oni1234') {
+                // Handle remember me functionality
+                if (rememberMe.checked) {
+                    localStorage.setItem('rememberedUsername', username);
+                    localStorage.setItem('rememberedPassword', password);
+                } else {
+                    localStorage.removeItem('rememberedUsername');
+                    localStorage.removeItem('rememberedPassword');
+                }
+                
+                // Show success message
+                successMessage.classList.remove('hidden');
+                
+                // Redirect to dashboard after delay
+                setTimeout(() => {
+                    loginInterface.classList.add('hidden');
+                    extractorInterface.classList.remove('hidden');
+                }, 1500);
+            } else {
+                // Show error message and shake animation
+                loginErrorMessage.classList.remove('hidden');
+                loginForm.classList.add('shake');
+                setTimeout(() => {
+                    loginForm.classList.remove('shake');
+                }, 500);
+                
+                // Clear password field
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        });
+        
+        // Logout functionality
+        logoutBtn.addEventListener('click', function() {
+            extractorInterface.classList.add('hidden');
+            loginInterface.classList.remove('hidden');
+            usernameInput.value = '';
+            passwordInput.value = '';
+            usernameInput.focus();
+        });
+        
+        // Extract video ID from URL
+        function extractVideoId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+        
+        // Format numbers with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        
+        // Format duration (PT4M13S -> 4:13)
+        function formatDuration(duration) {
+            const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+            const hours = (match[1] ? parseInt(match[1]) : 0);
+            const minutes = (match[2] ? parseInt(match[2]) : 0);
+            const seconds = (match[3] ? parseInt(match[3]) : 0);
+            
+            return hours > 0 
+                ? `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+                : `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Format date (2023-07-15T14:30:00Z -> July 15, 2023)
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+        
+        // Calculate engagement (likes + comments / views * 100)
+        function calculateEngagement(likes, comments, views) {
+            if (!likes || !comments || !views) return "N/A";
+            const engagement = ((parseInt(likes) + parseInt(comments)) / parseInt(views)) * 100;
+            return `${formatNumber(Math.round(engagement * 100) / 100)}% (Likes: ${formatNumber(likes)}, Comments: ${formatNumber(comments)}, Views: ${formatNumber(views)})`;
+        }
+        
+        // Copy text to clipboard
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual feedback
+                const btn = event.currentTarget;
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                btn.classList.add('text-green-500');
+                btn.classList.remove('text-gray-400', 'hover:text-blue-600');
+                
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-copy"></i>';
+                    btn.classList.remove('text-green-500');
+                    btn.classList.add('text-gray-400', 'hover:text-blue-600');
+                }, 2000);
+            });
+        }
+        
+        // Copy all data to clipboard
+        function copyAllData() {
+            const elements = [
+                {id: 'videoTitle', label: 'Video Title'},
+                {id: 'channelName', label: 'Channel Name'},
+                {id: 'viewsCount', label: 'Views'},
+                {id: 'likesCount', label: 'Likes'},
+                {id: 'commentsCount', label: 'Comments'},
+                {id: 'publishedDate', label: 'Published Date'},
+                {id: 'videoRuntime', label: 'Duration'},
+                {id: 'engagementCalculation', label: 'Engagement Calculation'}
+            ];
+            
+            let allText = "";
+            
+            elements.forEach(item => {
+                const value = document.getElementById(item.id).innerText;
+                allText += `${item.label}: ${value}\n`;
+            });
+            
+            navigator.clipboard.writeText(allText).then(() => {
+                // Visual feedback
+                copyAllBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyAllBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                copyAllBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                copyAllBtn.classList.add('glow');
+                
+                setTimeout(() => {
+                    copyAllBtn.innerHTML = '<i class="fas fa-copy"></i> Copy All';
+                    copyAllBtn.classList.remove('bg-green-600', 'hover:bg-green-700', 'glow');
+                    copyAllBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                // Fallback for browsers that don't support clipboard API
+                const textarea = document.createElement('textarea');
+                textarea.value = allText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                
+                // Visual feedback for fallback
+                copyAllBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyAllBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                copyAllBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                copyAllBtn.classList.add('glow');
+                
+                setTimeout(() => {
+                    copyAllBtn.innerHTML = '<i class="fas fa-copy"></i> Copy All';
+                    copyAllBtn.classList.remove('bg-green-600', 'hover:bg-green-700', 'glow');
+                    copyAllBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                }, 2000);
+            });
+        }
+        
+        // Fetch video data from YouTube API
+        async function fetchVideoData(videoId) {
+            try {
+                // Show loading state
+                loadingState.classList.remove('hidden');
+                resultsSection.classList.add('hidden');
+                errorState.classList.add('hidden');
+                
+                // Make API requests
+                const videoResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoId}&key=${API_KEY}`);
+                const videoData = await videoResponse.json();
+                
+                if (!videoData.items || videoData.items.length === 0) {
+                    throw new Error('Video not found. Please check the URL.');
+                }
+                
+                const video = videoData.items[0];
+                
+                // Update UI with video data
+                document.getElementById('videoTitle').textContent = video.snippet.title;
+                document.getElementById('channelName').textContent = video.snippet.channelTitle;
+                document.getElementById('viewsCount').textContent = formatNumber(video.statistics.viewCount) || "N/A";
+                document.getElementById('likesCount').textContent = formatNumber(video.statistics.likeCount) || "N/A";
+                document.getElementById('commentsCount').textContent = formatNumber(video.statistics.commentCount) || "N/A";
+                document.getElementById('publishedDate').textContent = formatDate(video.snippet.publishedAt);
+                document.getElementById('videoRuntime').textContent = formatDuration(video.contentDetails.duration);
+                
+                // Calculate and display engagement
+                const engagement = calculateEngagement(
+                    video.statistics.likeCount,
+                    video.statistics.commentCount,
+                    video.statistics.viewCount
+                );
+                document.getElementById('engagementCalculation').textContent = engagement;
+                
+                // Show results
+                loadingState.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error fetching video data:', error);
+                loadingState.classList.add('hidden');
+                errorMessage.textContent = error.message || 'An error occurred while fetching video data.';
+                errorState.classList.remove('hidden');
+            }
+        }
+        
+        // Event Listeners for YouTube Extractor
+        extractBtn.addEventListener('click', () => {
+            const videoUrl = videoUrlInput.value.trim();
+            
+            if (!videoUrl) {
+                errorMessage.textContent = 'Please enter a YouTube video URL.';
+                errorState.classList.remove('hidden');
+                return;
+            }
+            
+            const videoId = extractVideoId(videoUrl);
+            
+            if (!videoId) {
+                errorMessage.textContent = 'Invalid YouTube URL. Please enter a valid URL.';
+                errorState.classList.remove('hidden');
+                return;
+            }
+            
+            fetchVideoData(videoId);
+        });
+        
+        videoUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                extractBtn.click();
+            }
+        });
+        
+        copyAllBtn.addEventListener('click', copyAllData);
+        
+        // Add glow effect on focus
+        usernameInput.addEventListener('focus', function() {
+            this.classList.add('glow');
+        });
+        usernameInput.addEventListener('blur', function() {
+            this.classList.remove('glow');
+        });
+        passwordInput.addEventListener('focus', function() {
+            this.classList.add('glow');
+        });
+        passwordInput.addEventListener('blur', function() {
+            this.classList.remove('glow');
+        });
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=OniB/youtube-data-extract-with-api" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</html>
